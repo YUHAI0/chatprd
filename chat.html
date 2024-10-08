@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatPRD - 聊天界面</title>
+    <link rel="stylesheet" href="chat-style.css">
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-messages"></div>
+        <form id="chat-form">
+            <textarea id="user-input" placeholder="描述您的产品需求..."></textarea>
+            <button type="submit">生成PRD</button>
+        </form>
+    </div>
+    <script>
+        const config = {
+            apiUrl: "https://open.bigmodel.cn/api/paas/v4/chat/completions", // ChatGPT API的URL
+            apiKey: "4327b97965ce2715a8622b30d230e673.0P5kreD2wip29SOq", // 替换为您的API密钥
+            model: "glm-4", // 使用的模型
+            systemPrompt: "你是一个专门生成产品需求文档（PRD）的助手。" // 系统提示
+        };
+
+    </script>
+
+    <script src="chat-script.js"></script>
+</body>
+</html>
