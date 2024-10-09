@@ -1,29 +1,47 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4WBFY7B10E"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+    
+      gtag('config', 'G-4WBFY7B10E');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChatPRD - 聊天界面</title>
     <link rel="stylesheet" href="chat-style.css">
 </head>
 <body>
-    <div id="chat-container">
-        <div id="chat-messages"></div>
-        <form id="chat-form">
-            <textarea id="user-input" placeholder="描述您的产品需求..."></textarea>
-            <button type="submit">生成PRD</button>
-        </form>
-    </div>
+    <form id="chat-form">
+        <div id="chat-container">
+            <div id="chat-messages">
+                <!-- 初始消息已被移除 -->
+            </div>
+            <div id="loading-indicator" style="display: none;">
+                <span class="dot">.</span>
+                <span class="dot">.</span>
+                <span class="dot">.</span>
+            </div>
+            <div id="user-input-container">
+                <input type="text" id="user-input" placeholder="描述您的产品需求..." />
+                <button id="generate-button" type="submit">生成PRD</button>
+            </div>
+        </div>
+    </form>
     <script>
         const config = {
             apiUrl: "https://open.bigmodel.cn/api/paas/v4/chat/completions", // ChatGPT API的URL
             apiKey: "4327b97965ce2715a8622b30d230e673.0P5kreD2wip29SOq", // 替换为您的API密钥
             model: "glm-4", // 使用的模型
-            systemPrompt: "你是一个专门生成产品需求文档（PRD）的助手。" // 系统提示
+            systemPrompt: "你是一个专门生成产品需求文档（PRD）的助手。",// 系统提示
+            maxTokens: 3000 // 设置最大token数
         };
 
     </script>
-
     <script src="chat-script.js"></script>
 </body>
 </html>
