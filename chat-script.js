@@ -23,7 +23,9 @@ async function handleuserinput() {
             method: 'post',
             headers: {
                 'content-type': 'application/json',
-                'authorization': `bearer ${config.apikey}` // 使用配置中的api密钥
+                //'authorization': `bearer ${config.apikey}` // 使用配置中的api密钥
+                'authorization': `bearer cd0ff5dbb83d0cdf6e02a1ac9078ccda.rTHa54gDu8RJFeRr`
+                
             },
             body: json.stringify({
                 model: config.model, // 使用配置中的模型
