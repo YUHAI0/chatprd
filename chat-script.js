@@ -160,7 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${config.apiKey}` // 使用配置中的API密钥
+                    //'authorization': `bearer ${config.apikey}` // 使用配置中的api密钥
+                    'Authorization': `bearer cd0ff5dbb83d0cdf6e02a1ac9078ccda.rTHa54gDu8RJFeRr`
                 },
                 body: JSON.stringify({
                     model: config.model, // 使用配置中的模型
