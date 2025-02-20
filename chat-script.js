@@ -24,7 +24,7 @@ async function handleuserinput() {
             headers: {
                 'content-type': 'application/json',
                 //'authorization': `bearer ${config.apikey}` // 使用配置中的api密钥
-                'authorization': `bearer cd0ff5dbb83d0cdf6e02a1ac9078ccda.rTHa54gDu8RJFeRr`
+                'authorization': `cd0ff5dbb83d0cdf6e02a1ac9078ccda.rTHa54gDu8RJFeRr`
                 
             },
             body: json.stringify({
@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json',
                     //'authorization': `bearer ${config.apikey}` // 使用配置中的api密钥
-                    'Authorization': `bearer cd0ff5dbb83d0cdf6e02a1ac9078ccda.rTHa54gDu8RJFeRr`
+                    'Authorization': `cd0ff5dbb83d0cdf6e02a1ac9078ccda.rTHa54gDu8RJFeRr`
                 },
                 body: JSON.stringify({
                     model: config.model, // 使用配置中的模型
