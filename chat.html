@@ -40,7 +40,7 @@
     </header>
 
     <main>
-        <form id="chat-form" autocomplete="off">
+        <form id="chat-form" autocomplete="off" novalidate>
             <div id="chat-container">
                 <div id="chat-messages">
                     <div class="welcome-message">
@@ -73,7 +73,7 @@
                 </button>
                 <div id="user-input-container">
                     <div class="input-wrapper">
-                        <input type="text" id="user-input" placeholder="请详细描述您的产品需求，包括目标用户、核心功能等..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+                        <input type="text" id="user-input" name="user-input-unique" placeholder="请详细描述您的产品需求，包括目标用户、核心功能等..." autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-form-type="" />
                         <button id="generate-button" type="submit">
                             <span class="button-text">生成PRD</span>
                             <span class="button-icon">✨</span>
@@ -100,8 +100,11 @@
             inputElement.value = text;
             inputElement.focus();
             
-            // 清除任何可能的自动完成或缓存
+            // 清除任何可能的自动完成或缓存，设置随机name
+            const randomName = 'input-' + Math.random().toString(36).substr(2, 9);
+            inputElement.setAttribute('name', randomName);
             inputElement.setAttribute('autocomplete', 'new-password');
+            inputElement.setAttribute('data-lpignore', 'true');
         }
     </script>
     <script src="chat-script.js"></script>

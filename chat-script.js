@@ -271,8 +271,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // 将userScrolled暴露到全局，供其他函数使用
     window.userScrolled = userScrolled;
     
-    // 确保页面加载时输入框为空
+    // 确保页面加载时输入框为空并设置随机name属性
     userInput.value = '';
+    
+    // 动态设置随机name属性来防止历史记录
+    function randomizeInputName() {
+        const randomName = 'input-' + Math.random().toString(36).substr(2, 9);
+        userInput.setAttribute('name', randomName);
+        userInput.setAttribute('autocomplete', 'new-password');
+    }
+    
+    // 页面加载时设置随机name
+    randomizeInputName();
+    
+    // 输入框获得焦点时清理历史记录
+    userInput.addEventListener('focus', function() {
+        // 重新设置随机name和其他属性
+        randomizeInputName();
+        
+        // 额外的历史记录清理
+        this.setAttribute('data-lpignore', 'true');
+        this.removeAttribute('list');
+    });
+    
+    // 输入框失去焦点时也清理
+    userInput.addEventListener('blur', function() {
+        // 延迟清理，避免干扰正常提交
+        setTimeout(() => {
+            randomizeInputName();
+        }, 100);
+    });
     
     // 检测用户是否滚动到底部
     function isAtBottom() {
@@ -318,6 +346,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     async function handleUserInput() {
+        // 如果正在自动提问，忽略用户输入
+        if (isAutoAsking) {
+            console.log('自动提问进行中，忽略用户输入');
+            return;
+        }
+        
         const inputText = userInput.value.trim(); // 获取输入框的值并去除空格
         
         if (!inputText) {
@@ -331,35 +365,8 @@ document.addEventListener('DOMContentLoaded', () => {
             welcomeMessage.style.display = 'none';
         }
 
-        // 立即清空输入框，防止在流式输出过程中显示上一次输入
-        userInput.value = '';
-        
-        // 重置滚动状态，确保新消息能正常显示
-        userScrolled = false;
-        window.userScrolled = false;
-        
-        // 显示用户输入
-        addMessage('user', inputText);
-
-        // 显示加载动画并禁用按钮
-        loadingIndicator.style.display = 'block';
-        generateButton.disabled = true;
-        generateButton.innerHTML = '<span class="button-text">生成中...</span><span class="button-icon">⏳</span>';
-
-        // 将用户输入添加到历史消息
-        messageHistory.push({ role: 'user', content: inputText });
-
-        try {
-            // 发送API请求
-            await sendApiRequest(messageHistory);
-        } finally {
-            // 恢复按钮状态
-            generateButton.disabled = false;
-            generateButton.innerHTML = '<span class="button-text">生成PRD</span><span class="button-icon">✨</span>';
-            
-            // 确保输入框已清空（虽然在开始时已经清空了，但这里再次确保）
-            userInput.value = '';
-        }
+        // 使用统一的执行逻辑
+        executeUserInput(inputText);
     }
 
     document.getElementById('user-input').addEventListener('keydown', async (e) => {
@@ -511,6 +518,213 @@ document.addEventListener('DOMContentLoaded', () => {
         return tempDiv.innerHTML;
     }
 
+    // 生成后续提问选项
+    function addFollowUpQuestions(streamingMessage) {
+        // 根据对话内容智能生成相关的后续提问
+        const followUpQuestions = generateFollowUpQuestions(streamingMessage.content);
+        
+        // 创建后续提问容器
+        const followUpContainer = document.createElement('div');
+        followUpContainer.classList.add('follow-up-questions');
+        
+        const title = document.createElement('div');
+        title.classList.add('follow-up-title');
+        title.textContent = '💡 继续完善PRD文档：';
+        followUpContainer.appendChild(title);
+        
+        const questionsWrapper = document.createElement('div');
+        questionsWrapper.classList.add('follow-up-wrapper');
+        
+        followUpQuestions.forEach((question, index) => {
+            const questionButton = document.createElement('button');
+            questionButton.classList.add('follow-up-question');
+            questionButton.textContent = question;
+            questionButton.onclick = () => {
+                // 隐藏当前的后续提问选项
+                followUpContainer.style.display = 'none';
+                // 自动填写问题并提交
+                autoAskQuestion(question);
+            };
+            questionsWrapper.appendChild(questionButton);
+        });
+        
+        followUpContainer.appendChild(questionsWrapper);
+        
+        // 将后续提问添加到消息后面
+        streamingMessage.element.appendChild(followUpContainer);
+        
+        // 添加动画效果
+        setTimeout(() => {
+            followUpContainer.classList.add('show');
+        }, 500);
+    }
+    
+    // 生成智能后续提问
+    function generateFollowUpQuestions(content) {
+        // 预设的PRD相关后续提问模板
+        const questionTemplates = [
+            // 功能深化类
+            [
+                "请详细描述核心功能的具体实现流程",
+                "请补充用户界面设计要求和交互规范",
+                "请说明数据结构和接口设计方案"
+            ],
+            // 需求分析类
+            [
+                "请分析用户使用场景和痛点问题",
+                "请补充竞品分析和差异化优势",
+                "请明确产品目标和成功指标"
+            ],
+            // 技术实现类
+            [
+                "请补充技术架构和开发规范",
+                "请说明数据安全和隐私保护方案",
+                "请制定项目开发时间表和里程碑"
+            ],
+            // 运营推广类
+            [
+                "请制定用户获取和增长策略",
+                "请设计产品运营和推广方案",
+                "请分析商业模式和盈利方式"
+            ],
+            // 风险评估类
+            [
+                "请评估项目风险和应对策略",
+                "请补充产品测试和质量保证方案",
+                "请说明产品迭代和版本规划"
+            ]
+        ];
+        
+        // 根据内容关键词智能选择合适的问题组
+        const content_lower = content.toLowerCase();
+        
+        let selectedQuestions;
+        if (content_lower.includes('功能') || content_lower.includes('feature') || content_lower.includes('需求')) {
+            selectedQuestions = questionTemplates[0];
+        } else if (content_lower.includes('用户') || content_lower.includes('场景') || content_lower.includes('分析')) {
+            selectedQuestions = questionTemplates[1];
+        } else if (content_lower.includes('技术') || content_lower.includes('开发') || content_lower.includes('架构')) {
+            selectedQuestions = questionTemplates[2];
+        } else if (content_lower.includes('运营') || content_lower.includes('推广') || content_lower.includes('营销')) {
+            selectedQuestions = questionTemplates[3];
+        } else if (content_lower.includes('风险') || content_lower.includes('测试') || content_lower.includes('质量')) {
+            selectedQuestions = questionTemplates[4];
+        } else {
+            // 默认使用功能深化类问题
+            selectedQuestions = questionTemplates[0];
+        }
+        
+        return selectedQuestions;
+    }
+    
+    // 防重复执行标志
+    let isAutoAsking = false;
+    
+    // 自动提问功能
+    function autoAskQuestion(question) {
+        // 确保问题不为空
+        if (!question || !question.trim()) {
+            console.error('自动提问的问题为空');
+            return;
+        }
+        
+        // 防止重复执行
+        if (isAutoAsking) {
+            console.log('自动提问正在进行中，忽略重复调用');
+            return;
+        }
+        
+        isAutoAsking = true;
+        
+        // 隐藏欢迎消息（如果存在）
+        const welcomeMessage = document.querySelector('.welcome-message');
+        if (welcomeMessage) {
+            welcomeMessage.style.display = 'none';
+        }
+        
+        // 滚动到底部确保用户看到提问过程
+        smartScrollToBottom();
+        
+        // 添加视觉反馈，让输入框短暂高亮并显示问题文本
+        userInput.style.borderColor = 'var(--primary-color)';
+        userInput.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.2)';
+        userInput.value = question.trim();
+        
+        // 延迟很短时间让用户看到输入内容，然后直接提交
+        setTimeout(() => {
+            // 重置输入框样式
+            userInput.style.borderColor = '';
+            userInput.style.boxShadow = '';
+            
+            // 立即清空输入框
+            userInput.value = '';
+            randomizeInputName();
+            
+            // 直接执行提交逻辑
+            executeUserInput(question.trim());
+        }, 150);
+    }
+    
+    // 防重复执行API请求的标志
+    let isProcessingRequest = false;
+    
+    // 提取handleUserInput的核心逻辑，供自动提问使用
+    function executeUserInput(inputText) {
+        // 防止重复处理请求
+        if (isProcessingRequest) {
+            console.log('正在处理请求中，忽略重复调用');
+            return;
+        }
+        
+        isProcessingRequest = true;
+        
+        // 立即清空输入框，防止在流式输出过程中显示上一次输入
+        userInput.value = '';
+        
+        // 重新设置随机name属性防止历史记录
+        randomizeInputName();
+        
+        // 隐藏所有之前的后续提问选项
+        const previousFollowUps = document.querySelectorAll('.follow-up-questions');
+        previousFollowUps.forEach(followUp => {
+            followUp.style.display = 'none';
+        });
+        
+        // 重置滚动状态，确保新消息能正常显示
+        userScrolled = false;
+        window.userScrolled = false;
+        
+        // 显示用户输入
+        addMessage('user', inputText);
+
+        // 显示加载动画并禁用按钮
+        loadingIndicator.style.display = 'block';
+        generateButton.disabled = true;
+        generateButton.innerHTML = '<span class="button-text">生成中...</span><span class="button-icon">⏳</span>';
+
+        // 将用户输入添加到历史消息
+        messageHistory.push({ role: 'user', content: inputText });
+
+        // 发送API请求
+        sendApiRequest(messageHistory).finally(() => {
+            // 恢复按钮状态
+            generateButton.disabled = false;
+            generateButton.innerHTML = '<span class="button-text">生成PRD</span><span class="button-icon">✨</span>';
+            
+            // 确保输入框已清空并重新设置随机name
+            userInput.value = '';
+            randomizeInputName();
+            
+            // 重置处理标志位
+            isProcessingRequest = false;
+            
+            // 如果是自动提问，也重置自动提问标志位
+            if (isAutoAsking) {
+                isAutoAsking = false;
+            }
+        });
+    }
+
     // 完成流式消息
     function finishStreamingMessage(streamingMessage) {
         streamingMessage.element.classList.remove('streaming');
@@ -534,6 +748,9 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn('最终渲染失败，使用纯文本:', error);
             streamingMessage.container.innerHTML = streamingMessage.content.replace(/\n/g, '<br>');
         }
+        
+        // 添加后续提问选项
+        addFollowUpQuestions(streamingMessage);
         
         // 智能滚动：只在用户没有手动滚动时才滚动到底部
         setTimeout(() => {
@@ -661,12 +878,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         const aiMessage = data.choices[0].message.content;
                         messageHistory.push({'role': 'assistant', 'content': aiMessage});
+                        
+                        // 使用addMessage添加消息，然后为最后一个系统消息添加后续提问
                         addMessage('system', aiMessage);
+                        
+                        // 为降级方案的消息也添加后续提问选项
+                        setTimeout(() => {
+                            const lastSystemMessage = document.querySelector('.message.system:last-child');
+                            if (lastSystemMessage) {
+                                const mockStreamingMessage = {
+                                    element: lastSystemMessage,
+                                    content: aiMessage
+                                };
+                                addFollowUpQuestions(mockStreamingMessage);
+                            }
+                        }, 500);
                         
                         // 智能滚动：只在用户没有手动滚动时才滚动到底部
                         setTimeout(() => {
                             smartScrollToBottom();
-                        }, 200);
+                        }, 800);
                         return;
                     }
                 } catch (fallbackError) {
@@ -684,8 +915,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 addMessage('system', '生成PRD时出错，请重试。');
             }
             
-            // 确保在错误情况下也清空输入框
+            // 确保在错误情况下也清空输入框并重新设置随机name
             userInput.value = '';
+            randomizeInputName();
         }
     }
 });
