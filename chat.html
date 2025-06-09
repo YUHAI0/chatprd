@@ -12,26 +12,65 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatPRD - 聊天界面</title>
+    <title>ChatPRD - AI智能PRD生成工具</title>
+    <meta name="description" content="使用ChatPRD AI工具，快速生成专业的产品需求文档">
+    <!-- 引入现代字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="chat-style.css">
 </head>
 <body>
-    <form id="chat-form">
-        <div id="chat-container">
-            <div id="chat-messages">
-                <!-- 初始消息已被移除 -->
+    <header class="chat-header">
+        <div class="header-content">
+            <div class="logo">
+                <a href="index.html">ChatPRD</a>
             </div>
-            <div id="loading-indicator" style="display: none;">
-                <span class="dot">.</span>
-                <span class="dot">.</span>
-                <span class="dot">.</span>
-            </div>
-            <div id="user-input-container">
-                <input type="text" id="user-input" placeholder="描述您的产品需求..." />
-                <button id="generate-button" type="submit">生成PRD</button>
-            </div>
+            <div class="header-title">AI智能PRD生成器</div>
         </div>
-    </form>
+    </header>
+
+    <main>
+        <form id="chat-form">
+            <div id="chat-container">
+                <div id="chat-messages">
+                    <div class="welcome-message">
+                        <div class="welcome-content">
+                            <h2>🚀 欢迎使用ChatPRD</h2>
+                            <p>请详细描述您的产品需求，我将为您生成专业的PRD文档</p>
+                            <div class="example-prompts">
+                                <div class="example-prompt" onclick="fillExample(this)">
+                                    💡 开发一个在线教育平台
+                                </div>
+                                <div class="example-prompt" onclick="fillExample(this)">
+                                    📱 设计一个健身记录APP
+                                </div>
+                                <div class="example-prompt" onclick="fillExample(this)">
+                                    🛒 构建一个电商购物网站
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="loading-indicator" style="display: none;">
+                    <div class="loading-content">
+                        <div class="loading-spinner"></div>
+                        <span class="loading-text">AI正在为您生成PRD文档...</span>
+                    </div>
+                </div>
+                <div id="user-input-container">
+                    <div class="input-wrapper">
+                        <input type="text" id="user-input" placeholder="请详细描述您的产品需求，包括目标用户、核心功能等..." />
+                        <button id="generate-button" type="submit">
+                            <span class="button-text">生成PRD</span>
+                            <span class="button-icon">✨</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
+
     <script>
         const config = {
             apiUrl: "https://open.bigmodel.cn/api/paas/v4/chat/completions", // ChatGPT API的URL
@@ -41,6 +80,12 @@
             maxTokens: 3000 // 设置最大token数
         };
 
+        // 填充示例提示词
+        function fillExample(element) {
+            const text = element.textContent.replace(/💡|📱|🛒/, '').trim();
+            document.getElementById('user-input').value = text;
+            document.getElementById('user-input').focus();
+        }
     </script>
     <script src="chat-script.js"></script>
 </body>

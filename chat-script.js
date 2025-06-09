@@ -92,8 +92,15 @@ function addMessage(sender, content) {
     const messageElement = document.createElement('div');
     messageElement.classList.add('message', sender);
     
-    // 将换行符替换为 <br> 标签
-    messageElement.innerHTML = content.replace(/\n/g, '<br>'); // 处理换行符
+    if (sender === 'system') {
+        // 为系统消息创建pre元素以保持格式
+        const preElement = document.createElement('pre');
+        preElement.textContent = content;
+        messageElement.appendChild(preElement);
+    } else {
+        // 将换行符替换为 <br> 标签
+        messageElement.innerHTML = content.replace(/\n/g, '<br>');
+    }
 
     messagesContainer.appendChild(messageElement);
     messagesContainer.scrollTop = messagesContainer.scrollHeight; // 滚动到最新消息
@@ -109,34 +116,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // 存储历史消息
     let messageHistory = [];
     async function handleUserInput() {
-        // 显示加载动画
-        loadingIndicator.style.display = 'block'; // 显示加载指示器
         const inputText = userInput.value.trim(); // 获取输入框的值并去除空格
+        
+        if (!inputText) {
+            alert("请输入产品需求描述！"); // 提示用户输入内容
+            return;
+        }
+
+        // 隐藏欢迎消息（如果存在）
+        const welcomeMessage = document.querySelector('.welcome-message');
+        if (welcomeMessage) {
+            welcomeMessage.style.display = 'none';
+        }
 
         // 显示用户输入
         addMessage('user', inputText);
 
-        // 在加载指示器之前添加到消息容器
-        const messagescontainer = document.getElementById('chat-messages');
-        messagescontainer.appendChild(loadingIndicator);
+        // 显示加载动画
+        loadingIndicator.style.display = 'block'; // 显示加载指示器
 
 
-        if (inputText) {
-            // 将用户输入添加到历史消息
-            messageHistory.push({ role: 'user', content: inputText });
+        // 将用户输入添加到历史消息
+        messageHistory.push({ role: 'user', content: inputText });
 
-
-            // 发送API请求
-            sendApiRequest(messageHistory);
-
-            // 清空输入框
-            userInput.value = '';
-        } else {
-            alert("请输入产品需求描述！"); // 提示用户输入内容
-        }
+        // 发送API请求
+        sendApiRequest(messageHistory);
 
         // 清空输入框
-        document.getElementById('user-input').value = '';
+        userInput.value = '';
     }
 
     document.getElementById('user-input').addEventListener('keydown', async (e) => {
