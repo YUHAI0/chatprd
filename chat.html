@@ -67,6 +67,10 @@
                         <span class="loading-text">AI正在为您生成PRD文档...</span>
                     </div>
                 </div>
+                <button id="scroll-to-bottom-btn" style="display: none;" onclick="scrollToBottomManually()">
+                    <span>↓</span>
+                    <span>回到底部</span>
+                </button>
                 <div id="user-input-container">
                     <div class="input-wrapper">
                         <input type="text" id="user-input" placeholder="请详细描述您的产品需求，包括目标用户、核心功能等..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
@@ -82,9 +86,9 @@
 
     <script>
         const config = {
-            apiUrl: "https://open.bigmodel.cn/api/paas/v4/chat/completions", // ChatGPT API的URL
-            apiKey: "4327b97965ce2715a8622b30d230e673.0P5kreD2wip29SOq", // 替换为您的API密钥
-            model: "glm-4", // 使用的模型
+            apiUrl: "https://api.deepseek.com/v1/chat/completions", // Deepseek API的URL
+            apiKey: "sk-c4b1b786b8b94ec09f792808d55675a1", // Deepseek API密钥
+            model: "deepseek-chat", // 使用的模型
             systemPrompt: "你是一个专门生成产品需求文档（PRD）的助手。",// 系统提示
             maxTokens: 3000 // 设置最大token数
         };

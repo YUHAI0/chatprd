@@ -23,8 +23,7 @@ async function handleuserinput() {
             method: 'post',
             headers: {
                 'content-type': 'application/json',
-                //'authorization': `bearer ${config.apikey}` // 使用配置中的api密钥
-                'authorization': `cd0ff5dbb83d0cdf6e02a1ac9078ccda.rTHa54gDu8RJFeRr`
+                'authorization': `Bearer ${config.apiKey}` // 使用配置中的api密钥
                 
             },
             body: json.stringify({
@@ -120,9 +119,9 @@ function addMessage(sender, content) {
 
     messagesContainer.appendChild(messageElement);
     
-    // 确保滚动到最新消息
+    // 智能滚动到最新消息
     setTimeout(() => {
-        smoothScrollToBottom();
+        smartScrollToBottom();
     }, 100);
 }
 
@@ -203,6 +202,26 @@ function smoothScrollToBottom() {
     });
 }
 
+// 手动滚动到底部的函数
+function scrollToBottomManually() {
+    const chatMessages = document.getElementById('chat-messages');
+    const scrollToBottomBtn = document.getElementById('scroll-to-bottom-btn');
+    
+    // 强制滚动到底部
+    chatMessages.scrollTo({
+        top: chatMessages.scrollHeight,
+        behavior: 'smooth'
+    });
+    
+    // 隐藏按钮
+    scrollToBottomBtn.style.display = 'none';
+    
+    // 重置用户滚动状态
+    if (window.userScrolled !== undefined) {
+        window.userScrolled = false;
+    }
+}
+
 // 复制代码功能
 function copyCode(button, code) {
     navigator.clipboard.writeText(code).then(() => {
@@ -244,6 +263,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 存储历史消息
     let messageHistory = [];
+    
+    // 用户滚动状态管理
+    let userScrolled = false;
+    let scrollTimer = null;
+    
+    // 将userScrolled暴露到全局，供其他函数使用
+    window.userScrolled = userScrolled;
+    
+    // 检测用户是否滚动到底部
+    function isAtBottom() {
+        const threshold = 50; // 50px的阈值
+        return chatMessages.scrollTop >= chatMessages.scrollHeight - chatMessages.clientHeight - threshold;
+    }
+    
+    // 监听用户滚动事件
+    chatMessages.addEventListener('scroll', () => {
+        const scrollToBottomBtn = document.getElementById('scroll-to-bottom-btn');
+        
+        // 如果用户滚动到底部，则允许自动滚动
+        if (isAtBottom()) {
+            userScrolled = false;
+            window.userScrolled = false;
+            scrollToBottomBtn.style.display = 'none'; // 隐藏按钮
+        } else {
+            // 用户手动滚动了
+            userScrolled = true;
+            window.userScrolled = true;
+            scrollToBottomBtn.style.display = 'flex'; // 显示按钮
+        }
+        
+        // 清除之前的定时器
+        if (scrollTimer) {
+            clearTimeout(scrollTimer);
+        }
+        
+        // 3秒后如果用户没有继续滚动，且在底部，则重新启用自动滚动
+        scrollTimer = setTimeout(() => {
+            if (isAtBottom()) {
+                userScrolled = false;
+                window.userScrolled = false;
+                scrollToBottomBtn.style.display = 'none';
+            }
+        }, 3000);
+    });
+    
+    // 智能滚动函数：只在用户没有手动滚动时才自动滚动
+    function smartScrollToBottom() {
+        if (!userScrolled) {
+            smoothScrollToBottom();
+        }
+    }
     async function handleUserInput() {
         const inputText = userInput.value.trim(); // 获取输入框的值并去除空格
         
@@ -258,6 +328,10 @@ document.addEventListener('DOMContentLoaded', () => {
             welcomeMessage.style.display = 'none';
         }
 
+        // 重置滚动状态，确保新消息能正常显示
+        userScrolled = false;
+        window.userScrolled = false;
+        
         // 显示用户输入
         addMessage('user', inputText);
 
@@ -347,9 +421,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // 使用节流渲染提高性能
         streamingMessage.throttledRender();
         
-        // 自动滚动
+        // 智能自动滚动：只在用户没有手动滚动时才滚动
         setTimeout(() => {
-            smoothScrollToBottom();
+            smartScrollToBottom();
         }, 10);
     }
 
@@ -455,8 +529,21 @@ document.addEventListener('DOMContentLoaded', () => {
             streamingMessage.container.innerHTML = streamingMessage.content.replace(/\n/g, '<br>');
         }
         
+        // 智能滚动：只在用户没有手动滚动时才滚动到底部
         setTimeout(() => {
-            smoothScrollToBottom();
+            const scrollToBottomBtn = document.getElementById('scroll-to-bottom-btn');
+            if (userScrolled && scrollToBottomBtn) {
+                // 如果用户正在查看历史内容，更新按钮文字提示生成完成
+                scrollToBottomBtn.innerHTML = '<span>✅</span><span>生成完成，查看结果</span>';
+                scrollToBottomBtn.classList.add('completed');
+                
+                // 3秒后恢复原来的文字
+                setTimeout(() => {
+                    scrollToBottomBtn.innerHTML = '<span>↓</span><span>回到底部</span>';
+                    scrollToBottomBtn.classList.remove('completed');
+                }, 3000);
+            }
+            smartScrollToBottom();
         }, 100);
     }
 
@@ -472,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `cd0ff5dbb83d0cdf6e02a1ac9078ccda.rTHa54gDu8RJFeRr`
+                    'Authorization': `Bearer ${config.apiKey}`
                 },
                 body: JSON.stringify({
                     model: config.model,
@@ -548,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `cd0ff5dbb83d0cdf6e02a1ac9078ccda.rTHa54gDu8RJFeRr`
+                            'Authorization': `Bearer ${config.apiKey}`
                         },
                         body: JSON.stringify({
                             model: config.model,
@@ -570,8 +657,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         messageHistory.push({'role': 'assistant', 'content': aiMessage});
                         addMessage('system', aiMessage);
                         
+                        // 智能滚动：只在用户没有手动滚动时才滚动到底部
                         setTimeout(() => {
-                            smoothScrollToBottom();
+                            smartScrollToBottom();
                         }, 200);
                         return;
                     }
