@@ -14,10 +14,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChatPRD - AI智能PRD生成工具</title>
     <meta name="description" content="使用ChatPRD AI工具，快速生成专业的产品需求文档">
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/png" href="chatprd.png">
+    <link rel="shortcut icon" type="image/png" href="chatprd.png">
+    <link rel="apple-touch-icon" href="chatprd.png">
     <!-- 引入现代字体 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 引入markdown解析库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <!-- 引入代码高亮库 -->
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
     <link rel="stylesheet" href="chat-style.css">
 </head>
 <body>
@@ -31,7 +40,7 @@
     </header>
 
     <main>
-        <form id="chat-form">
+        <form id="chat-form" autocomplete="off">
             <div id="chat-container">
                 <div id="chat-messages">
                     <div class="welcome-message">
@@ -60,7 +69,7 @@
                 </div>
                 <div id="user-input-container">
                     <div class="input-wrapper">
-                        <input type="text" id="user-input" placeholder="请详细描述您的产品需求，包括目标用户、核心功能等..." />
+                        <input type="text" id="user-input" placeholder="请详细描述您的产品需求，包括目标用户、核心功能等..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
                         <button id="generate-button" type="submit">
                             <span class="button-text">生成PRD</span>
                             <span class="button-icon">✨</span>

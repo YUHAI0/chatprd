@@ -110,10 +110,14 @@ main {
 #chat-messages {
   flex-grow: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 2rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  max-height: calc(100vh - 200px);
+  min-height: 0;
+  scrollbar-gutter: stable;
 }
 
 /* 欢迎消息样式 */
@@ -122,6 +126,7 @@ main {
   justify-content: center;
   align-items: center;
   min-height: 60vh;
+  flex-shrink: 0;
 }
 
 .welcome-content {
@@ -183,6 +188,76 @@ main {
   line-height: 1.6;
   box-shadow: var(--shadow-sm);
   animation: fadeInUp 0.5s ease;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  flex-shrink: 0;
+}
+
+/* 流式消息样式 */
+.message.streaming {
+  position: relative;
+}
+
+/* 移除原来的伪元素光标 */
+/* .message.streaming .markdown-content::after { ... } */
+
+/* 新的跟随光标样式 */
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  background: var(--primary-color);
+  animation: blink 1s infinite;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  position: relative;
+}
+
+/* 在不同场景下的光标适配 */
+p .streaming-cursor,
+li .streaming-cursor,
+td .streaming-cursor,
+th .streaming-cursor {
+  vertical-align: baseline;
+}
+
+h1 .streaming-cursor,
+h2 .streaming-cursor,
+h3 .streaming-cursor,
+h4 .streaming-cursor,
+h5 .streaming-cursor,
+h6 .streaming-cursor {
+  vertical-align: text-bottom;
+  height: 0.8em;
+}
+
+code .streaming-cursor {
+  background: var(--white);
+  height: 1em;
+}
+
+/* 用户消息中的光标样式调整 */
+.user .streaming-cursor {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* 优化流式渲染时的过渡效果 */
+.message.streaming .markdown-content {
+  transition: none; /* 禁用过渡效果，提高流式体验 */
+}
+
+.message.streaming .markdown-content * {
+  animation: none !important; /* 禁用子元素动画 */
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
 }
 
 .user {
@@ -200,10 +275,235 @@ main {
   border-bottom-left-radius: 8px;
 }
 
-.system pre {
+/* Markdown样式 */
+.message .markdown-content {
+  line-height: 1.6;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+.message .markdown-content h1,
+.message .markdown-content h2,
+.message .markdown-content h3,
+.message .markdown-content h4,
+.message .markdown-content h5,
+.message .markdown-content h6 {
+  color: var(--text-color);
+  margin: 1em 0 0.5em 0;
+  font-weight: 600;
+}
+
+.message .markdown-content h1 {
+  font-size: 1.5em;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.3em;
+}
+
+.message .markdown-content h2 {
+  font-size: 1.3em;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+  padding-bottom: 0.2em;
+}
+
+.message .markdown-content h3 {
+  font-size: 1.2em;
+}
+
+.message .markdown-content h4 {
+  font-size: 1.1em;
+}
+
+.message .markdown-content p {
+  margin: 0.8em 0;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.message .markdown-content ul,
+.message .markdown-content ol {
+  margin: 0.8em 0;
+  padding-left: 1.5em;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.message .markdown-content li {
+  margin: 0.3em 0;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.message .markdown-content blockquote {
+  border-left: 4px solid var(--primary-color);
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  background: rgba(102, 126, 234, 0.05);
+  border-radius: 0 8px 8px 0;
+}
+
+.message .markdown-content code {
+  background: rgba(102, 126, 234, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: 4px;
+  padding: 0.2em 0.4em;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9em;
+  color: var(--primary-color);
+}
+
+.message .markdown-content pre {
+  background: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1em;
+  margin: 1em 0;
+  overflow-x: auto;
+  position: relative;
+  max-width: 100%;
   white-space: pre-wrap;
-  font-family: inherit;
-  margin: 0;
+  word-wrap: break-word;
+}
+
+.message .markdown-content pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.9em;
+  color: inherit;
+}
+
+.message .markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  table-layout: fixed;
+}
+
+.message .markdown-content .table-wrapper {
+  overflow-x: auto;
+  margin: 1em 0;
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.message .markdown-content th,
+.message .markdown-content td {
+  padding: 0.75em;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 0;
+}
+
+.message .markdown-content th {
+  background: rgba(102, 126, 234, 0.1);
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.message .markdown-content tr:hover {
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.message .markdown-content a {
+  color: var(--primary-color);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.message .markdown-content a:hover {
+  border-bottom-color: var(--primary-color);
+}
+
+.message .markdown-content hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+  margin: 2em 0;
+}
+
+.message .markdown-content strong {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.message .markdown-content em {
+  font-style: italic;
+  color: var(--text-light);
+}
+
+/* 代码高亮样式调整 */
+.message .markdown-content .hljs {
+  background: #f8f9fa !important;
+  color: #333 !important;
+}
+
+/* 复制按钮样式 */
+.code-block-wrapper {
+  position: relative;
+}
+
+.copy-button {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.3em 0.6em;
+  font-size: 0.8em;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.copy-button:hover {
+  opacity: 1;
+}
+
+.copy-button.copied {
+  background: var(--success-color);
+}
+
+/* 针对用户消息中的markdown调整 */
+.user .markdown-content h1,
+.user .markdown-content h2,
+.user .markdown-content h3,
+.user .markdown-content h4,
+.user .markdown-content h5,
+.user .markdown-content h6 {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.user .markdown-content code {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.user .markdown-content blockquote {
+  border-left-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.user .markdown-content a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.user .markdown-content strong {
+  color: rgba(255, 255, 255, 0.95);
 }
 
 /* 加载指示器 */
@@ -363,6 +663,7 @@ body {
   
   #chat-messages {
     padding: 1rem 0.5rem;
+    max-height: calc(100vh - 160px);
   }
   
   .welcome-content {
@@ -377,6 +678,20 @@ body {
   .message {
     max-width: 95%;
     padding: 1rem;
+  }
+  
+  .message .markdown-content pre {
+    font-size: 0.8em;
+    padding: 0.8em;
+  }
+  
+  .message .markdown-content table {
+    font-size: 0.9em;
+  }
+  
+  .message .markdown-content th,
+  .message .markdown-content td {
+    padding: 0.5em;
   }
   
   .input-wrapper {
@@ -406,5 +721,17 @@ body {
   
   #user-input-container {
     padding: 1rem;
+  }
+  
+  .message .markdown-content h1,
+  .message .markdown-content h2,
+  .message .markdown-content h3 {
+    font-size: 1.1em;
+  }
+  
+  .message .markdown-content h4,
+  .message .markdown-content h5,
+  .message .markdown-content h6 {
+    font-size: 1em;
   }
 }
