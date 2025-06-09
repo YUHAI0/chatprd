@@ -260,6 +260,33 @@ code .streaming-cursor {
   }
 }
 
+/* 加载消息样式 */
+.loading-message {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+  border-left: 4px solid var(--primary-color);
+}
+
+.loading-message .loading-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+}
+
+.loading-message .loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(102, 126, 234, 0.3);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-message .loading-text {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
 .user {
   background: var(--primary-gradient);
   color: var(--white);

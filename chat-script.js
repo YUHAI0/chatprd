@@ -537,6 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         followUpQuestions.forEach((question, index) => {
             const questionButton = document.createElement('button');
+            questionButton.type = 'button'; // 明确设置为button类型，避免触发表单提交
             questionButton.classList.add('follow-up-question');
             questionButton.textContent = question;
             questionButton.onclick = () => {
@@ -567,31 +568,31 @@ document.addEventListener('DOMContentLoaded', () => {
             [
                 "请详细描述核心功能的具体实现流程",
                 "请补充用户界面设计要求和交互规范",
-                "请说明数据结构和接口设计方案"
+                "帮我生成Word格式的文档"
             ],
             // 需求分析类
             [
                 "请分析用户使用场景和痛点问题",
                 "请补充竞品分析和差异化优势",
-                "请明确产品目标和成功指标"
+                "帮我生成Word格式的文档"
             ],
             // 技术实现类
             [
                 "请补充技术架构和开发规范",
                 "请说明数据安全和隐私保护方案",
-                "请制定项目开发时间表和里程碑"
+                "帮我生成Word格式的文档"
             ],
             // 运营推广类
             [
                 "请制定用户获取和增长策略",
                 "请设计产品运营和推广方案",
-                "请分析商业模式和盈利方式"
+                "帮我生成Word格式的文档"
             ],
             // 风险评估类
             [
                 "请评估项目风险和应对策略",
                 "请补充产品测试和质量保证方案",
-                "请说明产品迭代和版本规划"
+                "帮我生成Word格式的文档"
             ]
         ];
         
@@ -631,6 +632,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // 防止重复执行
         if (isAutoAsking) {
             console.log('自动提问正在进行中，忽略重复调用');
+            return;
+        }
+        
+        // 检查是否是Word文档生成请求
+        if (question.includes('帮我生成Word格式的文档')) {
+            generateWordDocument();
             return;
         }
         
@@ -769,6 +776,232 @@ document.addEventListener('DOMContentLoaded', () => {
             smartScrollToBottom();
         }, 100);
     }
+
+    // 生成Word文档
+    async function generateWordDocument() {
+        let loadingMessage = null;
+        try {
+            console.log('开始生成Word文档...');
+            
+            // 检查文件下载库是否加载
+            if (typeof saveAs === 'undefined') {
+                console.error('file-saver库未加载');
+                addMessage('user', '帮我生成Word格式的文档');
+                addMessage('system', '❌ 文件下载库未加载，请刷新页面重试。');
+                return;
+            }
+            
+            console.log('库检查通过，开始获取PRD内容...');
+            
+            // 获取最近的PRD内容
+            const lastAssistantMessage = getLastAssistantMessage();
+            if (!lastAssistantMessage) {
+                // 不使用alert，而是添加消息到聊天中
+                addMessage('user', '帮我生成Word格式的文档');
+                addMessage('system', '❌ 没有找到PRD文档内容。请先生成一份PRD文档，然后再尝试生成Word格式。');
+                return;
+            }
+            
+            console.log('PRD内容获取成功，长度:', lastAssistantMessage.length);
+
+            // 显示生成提示
+            addMessage('user', '帮我生成Word格式的文档');
+            loadingMessage = createLoadingMessage('正在生成Word文档...');
+            
+            console.log('开始创建RTF文档内容...');
+
+            // 创建RTF文档内容
+            const rtfContent = createRTFFromPRD(lastAssistantMessage);
+            console.log('RTF文档内容创建成功');
+            
+            // 生成文件名（包含时间戳）
+            const now = new Date();
+            const timestamp = now.toISOString().slice(0, 19).replace(/:/g, '-');
+            const filename = `PRD文档_${timestamp}.rtf`;
+            
+            console.log('开始生成文档blob...');
+
+            // 创建blob并下载 - 使用正确的编码
+            const blob = new Blob([rtfContent], { type: 'application/rtf;charset=utf-8' });
+            console.log('文档blob生成成功，大小:', blob.size);
+            
+            console.log('开始下载文档...');
+            saveAs(blob, filename);
+
+            // 移除加载提示，显示成功消息
+            removeLoadingMessage(loadingMessage);
+            addMessage('system', `✅ Word文档生成成功！\n\n📄 文件名：${filename}\n📝 格式：RTF（可用Word打开编辑）\n💾 文档已自动下载到您的设备\n\n💡 RTF格式可以被Microsoft Word、LibreOffice等办公软件完美打开和编辑。`);
+            
+            console.log('Word文档生成完成');
+
+        } catch (error) {
+            console.error('生成Word文档失败:', error);
+            console.error('错误堆栈:', error.stack);
+            
+            // 移除加载提示
+            if (loadingMessage) {
+                removeLoadingMessage(loadingMessage);
+            }
+            
+            addMessage('system', '❌ 生成Word文档失败，请稍后重试。\n\n错误信息：' + error.message + '\n\n请检查浏览器控制台获取详细错误信息。');
+        }
+    }
+
+    // 获取最近的助手消息内容
+    function getLastAssistantMessage() {
+        const systemMessages = document.querySelectorAll('.message.system');
+        if (systemMessages.length > 0) {
+            // 从后往前查找，跳过可能的加载消息或其他非内容消息
+            for (let i = systemMessages.length - 1; i >= 0; i--) {
+                const message = systemMessages[i];
+                
+                // 跳过加载消息
+                if (message.classList.contains('loading-message')) {
+                    continue;
+                }
+                
+                const markdownContent = message.querySelector('.markdown-content');
+                if (markdownContent) {
+                    const content = markdownContent.textContent || markdownContent.innerText;
+                    // 确保内容不为空且不是很短的内容（过滤掉简单的确认消息）
+                    if (content && content.trim().length > 50) {
+                        console.log('找到PRD内容，长度:', content.length);
+                        return content;
+                    }
+                }
+            }
+        }
+        
+        // 如果没找到，也检查一下历史消息记录
+        if (messageHistory && messageHistory.length > 0) {
+            for (let i = messageHistory.length - 1; i >= 0; i--) {
+                if (messageHistory[i].role === 'assistant' && messageHistory[i].content && messageHistory[i].content.length > 50) {
+                    console.log('从消息历史中找到PRD内容，长度:', messageHistory[i].content.length);
+                    return messageHistory[i].content;
+                }
+            }
+        }
+        
+        console.log('未找到有效的PRD文档内容');
+        return null;
+    }
+
+    // 创建加载消息
+    function createLoadingMessage(text) {
+        const messagesContainer = document.getElementById('chat-messages');
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', 'system', 'loading-message');
+        messageElement.innerHTML = `
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <span class="loading-text">${text}</span>
+            </div>
+        `;
+        messagesContainer.appendChild(messageElement);
+        smartScrollToBottom();
+        return messageElement;
+    }
+
+    // 移除加载消息
+    function removeLoadingMessage(messageElement) {
+        if (messageElement && messageElement.parentNode) {
+            messageElement.parentNode.removeChild(messageElement);
+        }
+    }
+
+    // 从PRD内容创建RTF文档
+    function createRTFFromPRD(prdContent) {
+        try {
+            console.log('开始创建RTF文档...');
+            
+            // RTF文档头部 - 使用UTF-8编码支持中文
+            let rtf = `{\\rtf1\\ansi\\ansicpg936\\deff0\\deflang2052{\\fonttbl{\\f0\\fnil\\fcharset134 SimSun;}{\\f1\\fnil\\fcharset134 Microsoft YaHei;}}`;
+            
+            // 文档标题
+            rtf += `\\f1\\fs32\\b\\qc ${convertToRTFUnicode('产品需求文档（PRD）')}\\par\\par`;
+            
+            // 生成时间
+            rtf += `\\f1\\fs20\\i\\qr ${convertToRTFUnicode('生成时间：')}${convertToRTFUnicode(new Date().toLocaleString('zh-CN'))}\\par\\par`;
+            
+            // 重置格式为正文
+            rtf += `\\f1\\fs20\\ql\\b0\\i0`;
+            
+            // 处理PRD内容
+            const lines = prdContent.split('\n');
+            
+            lines.forEach(line => {
+                const trimmedLine = line.trim();
+                
+                if (!trimmedLine) {
+                    // 空行
+                    rtf += `\\par`;
+                } else if (trimmedLine.startsWith('# ')) {
+                    // 一级标题
+                    const title = trimmedLine.substring(2);
+                    rtf += `\\par\\f1\\fs28\\b ${convertToRTFUnicode(title)}\\par\\par\\f1\\fs20\\b0`;
+                } else if (trimmedLine.startsWith('## ')) {
+                    // 二级标题
+                    const title = trimmedLine.substring(3);
+                    rtf += `\\par\\f1\\fs24\\b ${convertToRTFUnicode(title)}\\par\\par\\f1\\fs20\\b0`;
+                } else if (trimmedLine.startsWith('### ')) {
+                    // 三级标题
+                    const title = trimmedLine.substring(4);
+                    rtf += `\\par\\f1\\fs22\\b ${convertToRTFUnicode(title)}\\par\\par\\f1\\fs20\\b0`;
+                } else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
+                    // 无序列表
+                    const content = trimmedLine.substring(2);
+                    rtf += `\\par\\li360 ${convertToRTFUnicode('• ' + content)}\\li0`;
+                } else if (/^\d+\./.test(trimmedLine)) {
+                    // 有序列表
+                    rtf += `\\par\\li360 ${convertToRTFUnicode(trimmedLine)}\\li0`;
+                } else if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+                    // 粗体文本
+                    const content = trimmedLine.slice(2, -2);
+                    rtf += `\\par\\b ${convertToRTFUnicode(content)}\\b0`;
+                } else {
+                    // 普通段落
+                    rtf += `\\par ${convertToRTFUnicode(trimmedLine)}`;
+                }
+            });
+            
+            // RTF文档结尾
+            rtf += `}`;
+            
+            console.log('RTF文档创建成功，长度:', rtf.length);
+            return rtf;
+            
+        } catch (error) {
+            console.error('创建RTF文档失败:', error);
+            throw new Error('创建RTF文档失败: ' + error.message);
+        }
+    }
+    
+    // 将文本转换为RTF Unicode编码
+    function convertToRTFUnicode(text) {
+        let result = '';
+        for (let i = 0; i < text.length; i++) {
+            const char = text.charAt(i);
+            const code = text.charCodeAt(i);
+            
+            // 处理特殊字符
+            if (char === '\\') {
+                result += '\\\\';
+            } else if (char === '{') {
+                result += '\\{';
+            } else if (char === '}') {
+                result += '\\}';
+            } else if (code > 127) {
+                // 非ASCII字符使用Unicode编码
+                result += `\\u${code}?`;
+            } else {
+                // ASCII字符直接添加
+                result += char;
+            }
+        }
+        return result;
+    }
+
+
 
     async function sendApiRequest(history) {
         console.log("历史消息:", history); // 打印历史消息
