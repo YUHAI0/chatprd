@@ -96,8 +96,12 @@
         // 填充示例提示词
         function fillExample(element) {
             const text = element.textContent.replace(/💡|📱|🛒/, '').trim();
-            document.getElementById('user-input').value = text;
-            document.getElementById('user-input').focus();
+            const inputElement = document.getElementById('user-input');
+            inputElement.value = text;
+            inputElement.focus();
+            
+            // 清除任何可能的自动完成或缓存
+            inputElement.setAttribute('autocomplete', 'new-password');
         }
     </script>
     <script src="chat-script.js"></script>

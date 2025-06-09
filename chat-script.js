@@ -271,6 +271,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 将userScrolled暴露到全局，供其他函数使用
     window.userScrolled = userScrolled;
     
+    // 确保页面加载时输入框为空
+    userInput.value = '';
+    
     // 检测用户是否滚动到底部
     function isAtBottom() {
         const threshold = 50; // 50px的阈值
@@ -328,6 +331,9 @@ document.addEventListener('DOMContentLoaded', () => {
             welcomeMessage.style.display = 'none';
         }
 
+        // 立即清空输入框，防止在流式输出过程中显示上一次输入
+        userInput.value = '';
+        
         // 重置滚动状态，确保新消息能正常显示
         userScrolled = false;
         window.userScrolled = false;
@@ -350,10 +356,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // 恢复按钮状态
             generateButton.disabled = false;
             generateButton.innerHTML = '<span class="button-text">生成PRD</span><span class="button-icon">✨</span>';
+            
+            // 确保输入框已清空（虽然在开始时已经清空了，但这里再次确保）
+            userInput.value = '';
         }
-
-        // 清空输入框
-        userInput.value = '';
     }
 
     document.getElementById('user-input').addEventListener('keydown', async (e) => {
@@ -677,6 +683,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 addMessage('system', '生成PRD时出错，请重试。');
             }
+            
+            // 确保在错误情况下也清空输入框
+            userInput.value = '';
         }
     }
 });
